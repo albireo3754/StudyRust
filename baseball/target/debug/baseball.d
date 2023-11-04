@@ -1,1 +1,1 @@
-/Users/pray.123/work/rust/StudyRust/baseball/target/debug/baseball: /Users/pray.123/work/rust/StudyRust/baseball/src/main.rs
+/Users/pray/rust/StudyRust/baseball/target/debug/baseball: /Users/pray/rust/StudyRust/baseball/src/main.rs

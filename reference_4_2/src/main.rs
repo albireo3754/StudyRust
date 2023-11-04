@@ -12,6 +12,8 @@ fn main() {
 
     change(&mut s);
 
+    // 하지만 변경 가능한 참조는 동시에 두가지를 생성할 수 없음
+    // 이러한 제약은 컴파일 타임에 데이터 경합을 방지할 수 있기 때문에 유용함
     let mut s2 = String::from("hello");
 
     let r1 = &mut s2;
@@ -29,3 +31,10 @@ fn calculate_length(s: &String) -> usize {
 fn change(some_string: &mut String) {
     some_string.push_str(", world");
 }
+
+// dangle인 상황은 조심해야할 필요가 있음
+// fn dangle() -> &String {
+//     let s = String::from("hello");
+
+//     &s
+// }

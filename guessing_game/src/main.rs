@@ -2,6 +2,12 @@ use std::io;
 use rand::Rng;
 use std::cmp::Ordering;
 
+pub trait Summary {
+    fn summarize(&self) -> String {
+        "".to_string()
+    }
+}
+
 fn main() {
     println!("Guess the number!");
     // cargo doc --open 을 통해서 문서를 확인할 수 있음
