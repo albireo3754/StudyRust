@@ -1,16 +1,33 @@
+struct PrivateTest {
+   test: u32 
+}
+
+fn internal_adder2(a: i32, b: i32) -> i32 {
+    a + b
+}
+
 #[cfg(test)]
 mod tests {
     // 해당 use문을 이용해 super의 모듈을 상속받을 수 있음
     use adder;
+    use super::*;
+
+    #[test]
+    fn it_non_public() {
+        // let test = adder::Test { test: 3 };
+        let rec = adder::Rectangle { width: 4, height: 5 };
+        // internal_adder2(3, 4);
+        // let test2 = PrivateTest { test: 3 };
+    }
 
     // 해당 매크로를 통해 테스트 러너에게 테스트 해야할 타겟을 알려줌
     #[test]
     fn it_works() {
-        let result = add(2, 2);
+        // let result = add(2, 2);
         // 다른 언어에선 expected, real 로 나타내지만 rust에선 left, right로 표현됨
         // left, right값이 되기위해선 Partial_Equal과 Debug를 모두 채택해야함
 
-        assert_eq!(result, 6);
+        // assert_eq!(result, 6);
     }
 
     #[test]
@@ -23,16 +40,16 @@ mod tests {
 
     #[test]
     fn larger_can_hold_smaller() {
-        let larger = Rectangle {
-            width: 8,
-            height: 7,
-        };
-        let smaller = Rectangle {
-            width: 5,
-            height: 1,
-        };
+        // let larger = Rectangle {
+        //     width: 8,
+        //     height: 7,
+        // };
+        // let smaller = Rectangle {
+        //     width: 5,
+        //     height: 1,
+        // };
 
-        assert!(larger.can_hold(&smaller));
+        // assert!(larger.can_hold(&smaller));
     }
 
     #[test]

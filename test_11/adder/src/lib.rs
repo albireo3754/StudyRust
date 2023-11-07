@@ -23,3 +23,6 @@ impl Rectangle {
     }
 }
 
+struct Test {
+    test: u32
+}
