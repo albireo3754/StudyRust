@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use std::collections::{HashMap, BinaryHeap};
 use crate::Tile::{Empty, Wall};
 
 use rand::Rng;
@@ -35,6 +34,8 @@ fn render_map(map: &Vec<Vec<Tile>>, tick_count: u128) {
 
 
 mod maze {
+    use std::cmp::Ordering;
+    use std::collections::{BinaryHeap, HashMap};
     use crate::Tile::{Empty, Wall, End};
 
     use crate::Tile;
@@ -43,7 +44,7 @@ mod maze {
 
     use rand::seq::SliceRandom;
 
-    #[derive(Clone)]
+    #[derive(Clone, PartialEq, Eq)]
     pub struct Point {
         pub r: i32,
         pub c: i32
@@ -97,12 +98,47 @@ mod maze {
         }
     }
 
+    #[derive(PartialEq, Eq)]
+    struct Node {
+        weight: i32,
+        point: Point
+    }
+
+    impl PartialOrd for Node {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            match self.weight.partial_cmp(&other.weight) {
+                Some(core::cmp::Ordering::Equal) => return Some(Ordering::Equal),
+                ord => return ord,
+            }
+        }
+    }
+
+    impl Ord for Node {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.weight.cmp(&other.weight)
+        }
+    }
+
+    fn make_path() -> Vec<Point> {
+        todo!()
+    }
+
+    fn make_maze(map: &mut Vec<Vec<Tile>>, point: Point) -> Option<Vec<Point>> {
+        let mut queue = BinaryHeap::new();
+        let mut edgeMap: HashMap<Point, Point> = HashMap::new();
+        queue.push(Node { weight: 0 , point });
+
+        while !queue.is_empty() {
+            let node = queue.pop().unwrap();
+            
+            if map[node.point.r as usize][node.point.c as usize] == End {
+                return Option::Some(make_path());
+            }
+        }
+        return Option::None;
+    }
 }
 
-
-fn make_maze(map: &mut Vec<Vec<Tile>>, point: maze::Point) {
-
-}
 
 fn main() {
     
