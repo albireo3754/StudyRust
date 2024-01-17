@@ -8,6 +8,7 @@ use rand::Rng;
 pub enum Tile {
     Wall,
     Empty,
+    Scarab,
     End
 }
 
@@ -17,6 +18,7 @@ impl Tile {
         match self {
             Tile::Wall => "█",
             Tile::Empty => " ",
+            Tile::Scarab => "0",
             Tile::End => "X"
         }
     }
@@ -27,6 +29,16 @@ fn render_map(map: &Vec<Vec<Tile>>, tick_count: u128) {
 
     println!("==================== {} ====================", tick_count);
     for row in map {
+        println!("{}", row.into_iter().map(|tile| tile.to_string()).fold(String::from(""), |acc, cur| acc + cur));
+    }
+    println!("====================");
+}
+
+fn render_maze(maze: &maze::Maze, tick_count: u128) {
+    print!("\x1B[2J\x1B[1;1H");
+
+    println!("==================== {} ====================", tick_count);
+    for row in &maze.map {
         println!("{}", row.into_iter().map(|tile| tile.to_string()).fold(String::from(""), |acc, cur| acc + cur));
     }
     println!("====================");
@@ -61,6 +73,9 @@ mod maze {
         pub fn new(mut map: Vec<Vec<Tile>>) -> MazeMaker {
             let start_point = Point {r: 1, c: 1};
             map[start_point.r as usize][start_point.c as usize] = Empty;
+            let end_point = Point {r: (map.len() - 2) as i32, c: (map[0].len() - 2) as i32};
+            map[end_point.r as usize][end_point.c as usize] = End;
+
             MazeMaker {
                 map,
                 point: start_point
@@ -90,7 +105,7 @@ mod maze {
             for dir in 0..4 {
                 let nr = point.r + X[dir];
                 let nc = point.c + Y[dir]; 
-                if self.map[nr as usize][nc as usize] == Wall {
+                if self.map[nr as usize][nc as usize] == Wall || self.map[nr as usize][nc as usize] == End {
                     wall_count += 1;
                 }
             }
@@ -99,7 +114,7 @@ mod maze {
     }
 
     #[derive(PartialEq, Eq)]
-    struct Node {
+    pub struct Node {
         weight: i32,
         point: Point
     }
@@ -137,14 +152,77 @@ mod maze {
         }
         return Option::None;
     }
-}
 
+    pub struct Maze {
+        pub map: Vec<Vec<Tile>>,
+        pub weight: Vec<Vec<i32>>,
+        pub point: Point,
+        pub end_point: Point,
+        queue: BinaryHeap<Node>,
+    }
+
+    impl Maze {
+        pub fn new(map: Vec<Vec<Tile>>) -> Maze {
+            let start_point = Point {r: 1, c: 1};
+            let mut queue = BinaryHeap::new();
+            let weight = vec![vec![i32::MIN; map[0].len()]; map.len()];
+            queue.push(Node { weight: 0, point: start_point.clone()});
+            let end_point = Point {r: (map.len() - 2) as i32, c: (map[0].len() - 2) as i32};
+
+            Maze {
+                map,
+                weight,
+                point: start_point,
+                end_point: end_point,
+                queue
+            }
+        }
+
+        pub fn move_one_tick(&mut self) {
+            if let Some(node) = self.queue.pop() {
+                self.map[node.point.r as usize][node.point.c as usize] = Empty;
+                let dirs: Vec<usize> = (0..4).collect();
+                let current_weight = -node.weight - self.get_heuristic_distance(&node.point);
+                for dir in dirs {
+                    let nr = node.point.r + X[dir];
+                    let nc = node.point.c + Y[dir];
+                    if nr <= 0 || nr >= (self.map.len() - 1) as i32 || nc <= 0 || nc >= (self.map[0].len() - 1) as i32 {
+                        continue;
+                    }
+                    if self.map[nr as usize][nc as usize] == Wall {
+                        // 
+                        continue;
+                    }
+                    let new_point = Point {r: nr, c: nc};
+                    let new_weight = -(current_weight + 1 + self.get_heuristic_distance(&new_point));
+                    if self.weight[nr as usize][nc as usize] < new_weight {
+                        self.weight[nr as usize][nc as usize] = new_weight;
+                        self.queue.push(Node { weight: new_weight, point: new_point});
+                    }
+                }
+                let new_tick_point = self.get_current_tick();
+                self.map[new_tick_point.r as usize][new_tick_point.c as usize] = Tile::Scarab;
+            }
+        }
+
+        pub fn get_current_tick(&self) -> Point {
+            let weight = -self.queue.peek().unwrap().weight;
+            println!("weight: {:?}", weight);
+            return self.queue.peek().unwrap().point.clone();
+        }
+
+        pub fn get_heuristic_distance(&self, point: &Point) -> i32 {
+            return 0;
+            return (point.r - self.end_point.r).abs() + (point.c - self.end_point.c).abs();
+        }
+    }
+}
 
 fn main() {
     
     let mut tick_count: u128 = 0;
     const TICKS_PER_SECOND: u32 = 60;
-    const SKIP_TICKS: u32 = 1000 / TICKS_PER_SECOND;
+    const SKIP_TICKS: u32 = 1000 / TICKS_PER_SECOND * 10;
     
     let mut next_tick = std::time::Instant::now();
     let N = 20;
@@ -153,6 +231,8 @@ fn main() {
     // todo: init map by size
     let next_map: Vec<Vec<Tile>> = vec![vec![Wall; N + 2]; M + 2];
     let mut maze_maker = maze::MazeMaker::new(next_map);
+    maze_maker.make_maze();
+    let mut maze = maze::Maze::new(maze_maker.map.clone());
     loop {
         tick_count+=1;
         // caclculate tick count
@@ -165,9 +245,8 @@ fn main() {
         // let mut next_map = vec![vec![Wall, Wall, Wall],vec![Wall, Wall, Wall],vec![Wall, Wall, Wall]];
         // let mut next_map: Vec<Vec<Tile>> = [row; 20].into();
 
-        maze_maker.make_maze();
+        maze.move_one_tick();
 
-
-        render_map(&maze_maker.map, tick_count);
+        render_maze(&maze, tick_count);
     }
 }
