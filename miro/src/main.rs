@@ -201,6 +201,9 @@ mod maze {
                     }
                 }
                 let new_tick_point = self.get_current_tick();
+                if (self.map[new_tick_point.r as usize][new_tick_point.c as usize] == Tile::End) {
+                    self.queue.clear();
+                }
                 self.map[new_tick_point.r as usize][new_tick_point.c as usize] = Tile::Scarab;
             }
         }
@@ -212,7 +215,7 @@ mod maze {
         }
 
         pub fn get_heuristic_distance(&self, point: &Point) -> i32 {
-            return 0;
+            // return 0;
             return (point.r - self.end_point.r).abs() + (point.c - self.end_point.c).abs();
         }
     }
@@ -222,7 +225,7 @@ fn main() {
     
     let mut tick_count: u128 = 0;
     const TICKS_PER_SECOND: u32 = 60;
-    const SKIP_TICKS: u32 = 1000 / TICKS_PER_SECOND * 10;
+    const SKIP_TICKS: u32 = 1000 / TICKS_PER_SECOND * 3;
     
     let mut next_tick = std::time::Instant::now();
     let N = 20;
